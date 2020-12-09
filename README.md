@@ -32,4 +32,5 @@ sh evaluate.sh
 |                       | BLEU |
 | --------------------- | ---- |
 | transformer_wmt_en_zh | BLEU = 14.80, 52.8/22.4/11.2/5.9 |
+| transformer_wmt_en_zh_big| BLEU = 19.27, 54.8/25.7/14.1/8.1 |
 
