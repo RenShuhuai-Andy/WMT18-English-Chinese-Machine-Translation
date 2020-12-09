@@ -1,4 +1,7 @@
 TEXT=data/dataset
+
+python data/data_process.py
+
 fairseq-preprocess \
   --source-lang en --target-lang zh \
   --trainpref $TEXT/train --validpref $TEXT/dev \
