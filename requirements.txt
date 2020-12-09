@@ -1,0 +1,31 @@
+antlr4-python3-runtime==4.8
+certifi==2020.12.5
+cffi==1.14.4
+click==7.1.2
+Cython==0.29.21
+dataclasses==0.8
+editdistance==0.5.3
+fairseq==0.10.0
+hydra-core==1.0.4
+importlib-resources==3.3.0
+jieba==0.42.1
+joblib==0.17.0
+mkl-fft==1.2.0
+mkl-random==1.1.1
+mkl-service==2.3.0
+numpy @ file:///tmp/build/80754af9/numpy_and_numpy_base_1603487797006/work
+olefile==0.46
+omegaconf==2.0.5
+Pillow @ file:///tmp/build/80754af9/pillow_1603822238230/work
+portalocker==2.0.0
+protobuf==3.14.0
+pycparser==2.20
+PyYAML==5.3.1
+regex==2020.11.13
+sacrebleu==1.4.14
+sacremoses==0.0.43
+six @ file:///tmp/build/80754af9/six_1605205335545/work
+tensorboardX==2.1
+tqdm==4.54.1
+typing-extensions==3.7.4.3
+zipp==3.4.0
