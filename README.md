@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ## Process data
 
 ```
-sh process.sh
+sh process.sh jointed
 ```
 
 ## Train
@@ -31,5 +31,5 @@ sh evaluate.sh
 
 |                       | BLEU |
 | --------------------- | ---- |
-| transformer_wmt_en_zh | 14.8 |
+| transformer_wmt_en_zh | BLEU = 14.80, 52.8/22.4/11.2/5.9 |
 
