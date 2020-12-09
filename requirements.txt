@@ -13,10 +13,8 @@ joblib==0.17.0
 mkl-fft==1.2.0
 mkl-random==1.1.1
 mkl-service==2.3.0
-numpy @ file:///tmp/build/80754af9/numpy_and_numpy_base_1603487797006/work
 olefile==0.46
 omegaconf==2.0.5
-Pillow @ file:///tmp/build/80754af9/pillow_1603822238230/work
 portalocker==2.0.0
 protobuf==3.14.0
 pycparser==2.20
@@ -24,7 +22,6 @@ PyYAML==5.3.1
 regex==2020.11.13
 sacrebleu==1.4.14
 sacremoses==0.0.43
-six @ file:///tmp/build/80754af9/six_1605205335545/work
 tensorboardX==2.1
 tqdm==4.54.1
 typing-extensions==3.7.4.3

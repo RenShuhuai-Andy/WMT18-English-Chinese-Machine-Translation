@@ -17,4 +17,5 @@ def data_process(file_dir, data_type):
 
 if __name__ == '__main__':
     for data_type in ['train', 'dev', 'test']:
-        data_process('./dataset', data_type)
+        file_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dataset')
+        data_process(file_dir, data_type)
