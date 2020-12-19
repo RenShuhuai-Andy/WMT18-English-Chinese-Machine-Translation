@@ -20,9 +20,9 @@ from fairseq.modules import (
     SinusoidalPositionalEmbedding,
 )
 
-from module.transformer_layer import TransformerDecoderLayer, TransformerEncoderLayer
-from fairseq.modules.checkpoint_activations import checkpoint_wrapper
-from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
+from modules.transformer_layer import TransformerDecoderLayer, TransformerEncoderLayer
+from modules.checkpoint_activations import checkpoint_wrapper
+from modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
 
@@ -30,7 +30,7 @@ DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 
 
-@register_model("transformer")
+@register_model("sparse_transformer")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
