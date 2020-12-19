@@ -12,6 +12,7 @@ from fairseq import utils
 from fairseq.incremental_decoding_utils import with_incremental_state
 from fairseq.modules.fairseq_dropout import FairseqDropout
 from fairseq.modules.quant_noise import quant_noise
+from fairseq.modules import MultiheadAttention
 from torch import Tensor, nn
 from torch.nn import Parameter
 
@@ -321,7 +322,7 @@ class SparseMultiheadAttention(nn.Module):
                 )
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
-        attn_weights = self.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
+
 
         assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
 
@@ -345,6 +346,7 @@ class SparseMultiheadAttention(nn.Module):
                 attn_weights = attn_weights.transpose(0, 2)
             attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
+        attn_weights = self.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
         if before_softmax:
             return attn_weights, v
 
@@ -453,8 +455,8 @@ class SparseMultiheadAttention(nn.Module):
     def apply_sparse_mask(self, attn_weights, tgt_len: int, src_len: int, bsz: int):
         if self.top_k < 0:
             return attn_weights  # do not apply sparse
-        elif self.top_k > src_len:
-            top_k = src_len
+        elif self.top_k > attn_weights.shape[-1]: # top_k exceed the length 
+            top_k = attn_weights.shape[-1]
         else:
             top_k = self.top_k
         vk, _ = torch.topk(attn_weights, k=top_k, dim=-1)  # select top-k values in each row
