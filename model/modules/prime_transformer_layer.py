@@ -4,9 +4,9 @@ from .prime_mha import MultiheadAttention820
 
 class PrimeTransformerEncoderLayer(TransformerEncoderLayer):
     def __init__(self, args, layer_id):
-        super().__init__(args)
         self.layer_id = layer_id
-
+        super().__init__(args)
+        
     def build_self_attention(self, embed_dim, args):
         return MultiheadAttention820(
             self.embed_dim, args.encoder_attention_heads, layer_id=self.layer_id, args=args,
@@ -32,8 +32,8 @@ class PrimeTransformerDecoderLayer(TransformerDecoderLayer):
     """
 
     def __init__(self, args, layer_id, no_encoder_attn=False, add_bias_kv=False, add_zero_attn=False):
-        super().__init__(args, no_encoder_attn=no_encoder_attn, add_bias_kv=add_bias_kv, add_zero_attn=add_zero_attn)
         self.layer_id = layer_id
+        super().__init__(args, no_encoder_attn=no_encoder_attn, add_bias_kv=add_bias_kv, add_zero_attn=add_zero_attn)
 
     def build_self_attention(
             self, embed_dim, args, add_bias_kv=False, add_zero_attn=False

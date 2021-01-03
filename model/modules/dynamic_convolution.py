@@ -10,16 +10,26 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from fairseq import utils
-from .unfold import unfold1d
-from .linear import Linear
+from fairseq.modules.unfold import unfold1d
+import math
 bmm_fp16_support = tuple(int(x) for x in torch.version.cuda.split('.')) >= (9, 1, 0)
 
-# def Linear(in_features, out_features, bias=True):
-#     m = nn.Linear(in_features, out_features, bias)
-#     nn.init.xavier_uniform_(m.weight)
-#     if bias:
-#         nn.init.constant_(m.bias, 0.)
-#     return m
+def Linear(in_features, out_features, layer_id=0, args=None, cur_linear=None, bias=True, ):
+    m = nn.Linear(in_features, out_features, bias)
+    if args is None:
+        nn.init.xavier_uniform_(m.weight)
+    else:
+        init_method = args.init_method if 'init_method' in args else 'xavier'
+        if init_method == 'xavier':
+            nn.init.xavier_uniform_(m.weight)
+        elif init_method == 'fixup':
+            nn.init.xavier_uniform_(m.weight,  gain=1/math.sqrt(6))
+        elif init_method == 'xi':
+            gain = (layer_id+1)**(-0.5)
+            nn.init.xavier_uniform_(m.weight, gain=gain)
+    if bias:
+        nn.init.constant_(m.bias, 0.)
+    return m
 
 
 class DynamicConv1dTBC(nn.Module):
