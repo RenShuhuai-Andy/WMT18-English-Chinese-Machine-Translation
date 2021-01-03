@@ -1,6 +1,6 @@
 from fairseq.models import register_model_architecture
 from fairseq.models.transformer import base_architecture
-from model.sparse_transformer import sparse_base_architecture
+from .sparse_transformer import sparse_base_architecture
 
 
 @register_model_architecture('transformer', 'transformer_wmt_en_zh')

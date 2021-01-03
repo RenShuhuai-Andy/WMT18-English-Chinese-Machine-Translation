@@ -19,6 +19,6 @@ CUDA_VISIBLE_DEVICES=$GPU fairseq-train \
     --eval-bleu-detok moses \
     --eval-bleu-remove-bpe \
     --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
-    --tensorboard-logdir tensorboard-logdir/
+    --tensorboard-logdir tensorboard-logdir/$model_signature
 
 
