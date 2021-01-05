@@ -21,7 +21,7 @@ sh process.sh jointed
 sh train.sh
 ```
 
-## Evaluation
+## Evaluation`
 
 ```
 sh evaluate.sh
@@ -35,3 +35,6 @@ sh evaluate.sh
 | transformer_wmt_en_zh_big| 19.27, 54.8/25.7/14.1/8.1 |
 | transformer_wmt_en_zh_sparse_topk8| 18.40, 55.9/25.9/14.1/8.1 | 
 | transformer_wmt_en_zh_sparse_topk8_big | 18.73, 55.9/26.2/14.3/8.3 | 
+| transformer_wmt_en_zh_prime| 18.72, 54.8/25.6/13.9/8.0 | 
+| transformer_wmt_en_zh_prime_big| 18.94, 54.9/25.7/14.1/8.1 | 
+
