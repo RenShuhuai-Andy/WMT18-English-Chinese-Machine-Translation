@@ -10,6 +10,7 @@ from torch.nn import Parameter
 import torch.nn.functional as F
 
 from fairseq import utils
+
 bmm_fp16_support = tuple(int(x) for x in torch.version.cuda.split('.')) >= (9, 1, 0)
 
 
@@ -18,7 +19,7 @@ class SparseActivatedMultiheadAttention(nn.Module):
     See "Attention Is All You Need" for more details.
     """
 
-    def __init__(self, embed_dim, num_heads, args=None,  kdim=None, vdim=None, dropout=0., bias=True,
+    def __init__(self, embed_dim, num_heads, args=None, kdim=None, vdim=None, dropout=0., bias=True,
                  add_bias_kv=False, add_zero_attn=False, self_attention=False,
                  encoder_decoder_attention=False, cur_attn_type='es'):
         super().__init__()
@@ -73,7 +74,6 @@ class SparseActivatedMultiheadAttention(nn.Module):
         self.cur_san_active = cur_san_active
         self.entmax = args.entmax if 'entmax' in args else 0
 
-
     def prepare_for_onnx_export_(self):
         self.onnx_trace = True
 
@@ -81,9 +81,9 @@ class SparseActivatedMultiheadAttention(nn.Module):
         if self.qkv_same_dim:
             # Empirically observed the convergence to be much better with
             # the scaled initialization
-            nn.init.xavier_uniform_(self.k_proj.weight, gain=1/math.sqrt(2))
-            nn.init.xavier_uniform_(self.v_proj.weight, gain=1/math.sqrt(2))
-            nn.init.xavier_uniform_(self.q_proj.weight, gain=1/math.sqrt(2))
+            nn.init.xavier_uniform_(self.k_proj.weight, gain=1 / math.sqrt(2))
+            nn.init.xavier_uniform_(self.v_proj.weight, gain=1 / math.sqrt(2))
+            nn.init.xavier_uniform_(self.q_proj.weight, gain=1 / math.sqrt(2))
         else:
             nn.init.xavier_uniform_(self.k_proj.weight)
             nn.init.xavier_uniform_(self.v_proj.weight)
@@ -98,15 +98,15 @@ class SparseActivatedMultiheadAttention(nn.Module):
             nn.init.xavier_normal_(self.bias_v)
 
     def forward(
-        self,
-        query, key, value,
-        key_padding_mask=None,
-        incremental_state=None,
-        need_weights=True,
-        static_kv=False,
-        attn_mask=None,
-        before_softmax=False,
-        need_head_weights=False,
+            self,
+            query, key, value,
+            key_padding_mask=None,
+            incremental_state=None,
+            need_weights=True,
+            static_kv=False,
+            attn_mask=None,
+            before_softmax=False,
+            need_head_weights=False,
     ):
         """Input shape: Time x Batch x Channel
         Args:
@@ -327,11 +327,11 @@ class SparseActivatedMultiheadAttention(nn.Module):
 
     @staticmethod
     def _append_prev_key_padding_mask(
-        key_padding_mask,
-        prev_key_padding_mask,
-        batch_size,
-        src_len,
-        static_kv,
+            key_padding_mask,
+            prev_key_padding_mask,
+            batch_size,
+            src_len,
+            static_kv,
     ):
         # saved key padding masks have shape (bsz, seq_len)
         if prev_key_padding_mask is not None and static_kv:
@@ -389,8 +389,8 @@ class SparseActivatedMultiheadAttention(nn.Module):
                 # in_proj_weight used to be q + k + v with same dimensions
                 dim = int(state_dict[k].shape[0] / 3)
                 items_to_add[prefix + 'q_proj.weight'] = state_dict[k][:dim]
-                items_to_add[prefix + 'k_proj.weight'] = state_dict[k][dim:2*dim]
-                items_to_add[prefix + 'v_proj.weight'] = state_dict[k][2*dim:]
+                items_to_add[prefix + 'k_proj.weight'] = state_dict[k][dim:2 * dim]
+                items_to_add[prefix + 'v_proj.weight'] = state_dict[k][2 * dim:]
 
                 keys_to_remove.append(k)
 
@@ -398,8 +398,8 @@ class SparseActivatedMultiheadAttention(nn.Module):
                 if k_bias in state_dict.keys():
                     dim = int(state_dict[k].shape[0] / 3)
                     items_to_add[prefix + 'q_proj.bias'] = state_dict[k_bias][:dim]
-                    items_to_add[prefix + 'k_proj.bias'] = state_dict[k_bias][dim:2*dim]
-                    items_to_add[prefix + 'v_proj.bias'] = state_dict[k_bias][2*dim:]
+                    items_to_add[prefix + 'k_proj.bias'] = state_dict[k_bias][dim:2 * dim]
+                    items_to_add[prefix + 'v_proj.bias'] = state_dict[k_bias][2 * dim:]
 
                     keys_to_remove.append(prefix + 'in_proj_bias')
 
