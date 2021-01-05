@@ -8,11 +8,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from fairseq.incremental_decoding_utils import with_incremental_state
 from fairseq import utils
 from fairseq.modules.unfold import unfold1d
 import math
+
 bmm_fp16_support = tuple(int(x) for x in torch.version.cuda.split('.')) >= (9, 1, 0)
+
 
 def Linear(in_features, out_features, layer_id=0, args=None, cur_linear=None, bias=True, ):
     m = nn.Linear(in_features, out_features, bias)
@@ -23,15 +25,16 @@ def Linear(in_features, out_features, layer_id=0, args=None, cur_linear=None, bi
         if init_method == 'xavier':
             nn.init.xavier_uniform_(m.weight)
         elif init_method == 'fixup':
-            nn.init.xavier_uniform_(m.weight,  gain=1/math.sqrt(6))
+            nn.init.xavier_uniform_(m.weight, gain=1 / math.sqrt(6))
         elif init_method == 'xi':
-            gain = (layer_id+1)**(-0.5)
+            gain = (layer_id + 1) ** (-0.5)
             nn.init.xavier_uniform_(m.weight, gain=gain)
     if bias:
         nn.init.constant_(m.bias, 0.)
     return m
 
 
+@with_incremental_state
 class DynamicConv1dTBC(nn.Module):
     '''Dynamic lightweight convolution taking T x B x C inputs
     Args:
@@ -57,10 +60,11 @@ class DynamicConv1dTBC(nn.Module):
             `(num_heads, 1, kernel_size)`
         bias:   the learnable bias of the module of shape `(input_size)`
     '''
-    def __init__(self, input_size,  kernel_size=1, padding_l=None, num_heads=1,
+
+    def __init__(self, input_size, kernel_size=1, padding_l=None, num_heads=1,
                  weight_dropout=0., weight_softmax=False,
                  renorm_padding=False, bias=False, conv_bias=False,
-                 query_size=None, in_proj=False, args=None,):
+                 query_size=None, in_proj=False, args=None, ):
         super().__init__()
         self.input_size = input_size
         self.query_size = input_size if query_size is None else query_size
@@ -104,7 +108,8 @@ class DynamicConv1dTBC(nn.Module):
             unfold: unfold the input or not. If not, we use the matrix trick instead
             query: use the specified query to predict the conv filters
         '''
-        unfold = x.size(0) > 512 if unfold is None else unfold  # use unfold mode as default for long sequence to save memory
+        unfold = x.size(
+            0) > 512 if unfold is None else unfold  # use unfold mode as default for long sequence to save memory
         unfold = unfold or (incremental_state is not None)
         assert query is None or not self.in_proj
 
@@ -131,9 +136,9 @@ class DynamicConv1dTBC(nn.Module):
         if self.in_proj:
             proj = self.weight_linear(x)
             x = proj.narrow(2, 0, self.input_size).contiguous()
-            weight = proj.narrow(2, self.input_size, H*K).contiguous().view(T*B*H, -1)
+            weight = proj.narrow(2, self.input_size, H * K).contiguous().view(T * B * H, -1)
         else:
-            weight = self.weight_linear(query).view(T*B*H, -1)
+            weight = self.weight_linear(query).view(T * B * H, -1)
 
         # renorm_padding is only implemented in _forward_expanded
         assert not self.renorm_padding or incremental_state is not None
@@ -144,16 +149,16 @@ class DynamicConv1dTBC(nn.Module):
                 input_buffer = x.new()
             x_unfold = torch.cat([input_buffer, x.unsqueeze(3)], dim=3)
             if self.kernel_size > 1:
-                self._set_input_buffer(incremental_state, x_unfold[:, :, :, -self.kernel_size+1:])
-            x_unfold = x_unfold.view(T*B*H, R, -1)
+                self._set_input_buffer(incremental_state, x_unfold[:, :, :, -self.kernel_size + 1:])
+            x_unfold = x_unfold.view(T * B * H, R, -1)
         else:
             padding_l = self.padding_l
-            if K > T and padding_l == K-1:
-                weight = weight.narrow(1, K-T, T)
-                K, padding_l = T, T-1
+            if K > T and padding_l == K - 1:
+                weight = weight.narrow(1, K - T, T)
+                K, padding_l = T, T - 1
             # unfold the input: T x B x C --> T' x B x C x K
             x_unfold = unfold1d(x, K, padding_l, 0)
-            x_unfold = x_unfold.view(T*B*H, R, K)
+            x_unfold = x_unfold.view(T * B * H, R, K)
 
         if self.weight_softmax and not self.renorm_padding:
             weight = F.softmax(weight, dim=1)
@@ -186,23 +191,23 @@ class DynamicConv1dTBC(nn.Module):
         if self.in_proj:
             proj = self.weight_linear(x)
             x = proj.narrow(2, 0, self.input_size).contiguous()
-            weight = proj.narrow(2, self.input_size, H*K).contiguous().view(T*B*H, -1)
+            weight = proj.narrow(2, self.input_size, H * K).contiguous().view(T * B * H, -1)
         else:
             #  x: T, B, C. linear C,H*K   weight T,B H*K
-            weight = self.weight_linear(query).view(T*B*H, -1)  # T*B*H, K
+            weight = self.weight_linear(query).view(T * B * H, -1)  # T*B*H, K
 
         if not self.renorm_padding:
             if self.weight_softmax:
                 weight = F.softmax(weight, dim=1)
             weight = F.dropout(weight, self.weight_dropout, training=self.training, inplace=False)
         weight = weight.narrow(1, 0, K).contiguous()
-        weight = weight.view(T, B*H, K).transpose(0, 1)  # B*H, T, K
+        weight = weight.view(T, B * H, K).transpose(0, 1)  # B*H, T, K
         # print('x size',x.size(),'T',T,"B",B,'H',H,'R',R) # 48,76,384
-        x = x.contiguous().view(T, B*H, R).transpose(0, 1)  # B*H,T,R
+        x = x.contiguous().view(T, B * H, R).transpose(0, 1)  # B*H,T,R
         if self.weight_softmax and self.renorm_padding:
             # turn the convolution filters into band matrices
-            weight_expanded = weight.new(B*H, T, T+K-1).fill_(float('-inf'))
-            weight_expanded.as_strided((B*H, T, K), (T*(T+K-1), T+K, 1)).copy_(weight)
+            weight_expanded = weight.new(B * H, T, T + K - 1).fill_(float('-inf'))
+            weight_expanded.as_strided((B * H, T, K), (T * (T + K - 1), T + K, 1)).copy_(weight)
             weight_expanded = weight_expanded.narrow(2, self.padding_l, T)
             # normalize the weight over valid positions like self-attention
             weight_expanded = F.softmax(weight_expanded, dim=2)
@@ -210,12 +215,12 @@ class DynamicConv1dTBC(nn.Module):
         else:
             P = self.padding_l
             # For efficieny, we cut the kernel size and reduce the padding when the kernel is larger than the length
-            if K > T and P == K-1:
-                weight = weight.narrow(2, K-T, T)
-                K, P = T, T-1
+            if K > T and P == K - 1:
+                weight = weight.narrow(2, K - T, T)
+                K, P = T, T - 1
             # turn the convolution filters into band matrices
-            weight_expanded = weight.new_zeros(B*H, T, T+K-1, requires_grad=False)  # B*H,T,K+T+K-1
-            weight_expanded.as_strided((B*H, T, K), (T*(T+K-1), T+K, 1)).copy_(weight)   # B*H x T x
+            weight_expanded = weight.new_zeros(B * H, T, T + K - 1, requires_grad=False)  # B*H,T,K+T+K-1
+            weight_expanded.as_strided((B * H, T, K), (T * (T + K - 1), T + K, 1)).copy_(weight)  # B*H x T x
             weight_expanded = weight_expanded.narrow(2, P, T)  # B*H x T x T
         if bmm_fp16_support:
             output = torch.bmm(weight_expanded, x)

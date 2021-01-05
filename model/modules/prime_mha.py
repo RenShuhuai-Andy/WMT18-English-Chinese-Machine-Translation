@@ -9,14 +9,17 @@ import torch
 from torch import nn
 from torch.nn import Parameter
 import torch.nn.functional as F
-
+from typing import Dict, Optional, Tuple
 from fairseq import utils
 import math
+from fairseq.incremental_decoding_utils import with_incremental_state
 from .dynamic_convolution import DynamicConv1dTBC
+from torch import Tensor, nn
 
 bmm_fp16_support = tuple(int(x) for x in torch.version.cuda.split('.')) >= (9, 1, 0)
 
 
+@with_incremental_state
 class MultiheadAttention820(nn.Module):
     """Shared Projection
 
@@ -90,7 +93,7 @@ class MultiheadAttention820(nn.Module):
                     dynamic_num_heads = args.decoder_attention_heads
                 else:
                     padding_l = kernel_size // 2 if kernel_size % 2 == 1 else (
-                    (self.kernel_size - 1) // 2, self.kernel_size // 2)
+                        (self.kernel_size - 1) // 2, self.kernel_size // 2)
                     dynamic_num_heads = args.encoder_attention_heads
                 dynamic = DynamicConv1dTBC(self.embed_dim, kernel_size, padding_l=padding_l, weight_softmax=True,
                                            num_heads=dynamic_num_heads, weight_dropout=0.1, )
@@ -145,8 +148,19 @@ class MultiheadAttention820(nn.Module):
         if self.bias_v is not None:
             nn.init.xavier_normal_(self.bias_v)
 
-    def forward(self, query, key, value, key_padding_mask=None, incremental_state=None,
-                need_weights=True, static_kv=False, attn_mask=None):
+    def forward(
+            self,
+            query,
+            key: Optional[Tensor],
+            value: Optional[Tensor],
+            key_padding_mask: Optional[Tensor] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            need_weights: bool = True,
+            static_kv: bool = False,
+            attn_mask: Optional[Tensor] = None,
+            before_softmax: bool = False,
+            need_head_weights: bool = False,
+    ) -> Tuple[Tensor, Optional[Tensor]]:
         """Input shape: Time x Batch x Channel
 
         Self-attention can be implemented by passing in the same arguments for
@@ -155,6 +169,8 @@ class MultiheadAttention820(nn.Module):
         the key by passing a binary ByteTensor (`key_padding_mask`) with shape:
         batch x src_len, where padding elements are indicated by 1s.
         """
+        if need_head_weights:
+            need_weights = True
 
         qkv_same = query.data_ptr() == key.data_ptr() == value.data_ptr()
         kv_same = key.data_ptr() == value.data_ptr()
@@ -291,7 +307,7 @@ class MultiheadAttention820(nn.Module):
             attn_weights = attn_weights.type_as(query)
             attn = attn.type_as(query)
         assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
-        if (self.onnx_trace and attn.size(1) == 1):
+        if self.onnx_trace and attn.size(1) == 1:
             # when ONNX tracing a single decoder step (sequence length == 1)
             # the transpose is a no-op copy before view, thus unnecessary
             attn = attn.contiguous().view(tgt_len, bsz, embed_dim)
@@ -324,11 +340,12 @@ class MultiheadAttention820(nn.Module):
                 attn = torch.cat(all_res, -1)
         attn = self.out_proj(attn)
         if need_weights:
-            # average attention weights over heads
-            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights.sum(dim=1) / self.num_heads
-        else:
-            attn_weights = None
+            attn_weights = attn_weights.view(
+                bsz, self.num_heads, tgt_len, src_len
+            ).transpose(1, 0)
+            if not need_head_weights:
+                # average attention weights over heads
+                attn_weights = attn_weights.mean(dim=0)
 
         return attn, attn_weights
 
@@ -372,6 +389,7 @@ class MultiheadAttention820(nn.Module):
             bias = bias[start:end]
         return F.linear(input, weight, bias)
 
+    @torch.jit.export
     def reorder_incremental_state(self, incremental_state, new_order):
         """Reorder buffered internal state (for incremental generation)."""
         input_buffer = self._get_input_buffer(incremental_state)
@@ -396,6 +414,7 @@ class MultiheadAttention820(nn.Module):
         )
 
 
+@with_incremental_state
 class MultiheadAttention(nn.Module):
     """Multi-headed attention.
 
@@ -462,8 +481,19 @@ class MultiheadAttention(nn.Module):
         if self.bias_v is not None:
             nn.init.xavier_normal_(self.bias_v)
 
-    def forward(self, query, key, value, key_padding_mask=None, incremental_state=None,
-                need_weights=True, static_kv=False, attn_mask=None):
+    def forward(
+            self,
+            query,
+            key: Optional[Tensor],
+            value: Optional[Tensor],
+            key_padding_mask: Optional[Tensor] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            need_weights: bool = True,
+            static_kv: bool = False,
+            attn_mask: Optional[Tensor] = None,
+            before_softmax: bool = False,
+            need_head_weights: bool = False,
+    ) -> Tuple[Tensor, Optional[Tensor]]:
         """Input shape: Time x Batch x Channel
 
         Self-attention can be implemented by passing in the same arguments for
@@ -472,6 +502,8 @@ class MultiheadAttention(nn.Module):
         the key by passing a binary ByteTensor (`key_padding_mask`) with shape:
         batch x src_len, where padding elements are indicated by 1s.
         """
+        if need_head_weights:
+            need_weights = True
 
         qkv_same = query.data_ptr() == key.data_ptr() == value.data_ptr()
         kv_same = key.data_ptr() == value.data_ptr()
@@ -605,13 +637,13 @@ class MultiheadAttention(nn.Module):
         else:
             attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
         attn = self.out_proj(attn)
-
         if need_weights:
-            # average attention weights over heads
-            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights.sum(dim=1) / self.num_heads
-        else:
-            attn_weights = None
+            attn_weights = attn_weights.view(
+                bsz, self.num_heads, tgt_len, src_len
+            ).transpose(1, 0)
+            if not need_head_weights:
+                # average attention weights over heads
+                attn_weights = attn_weights.mean(dim=0)
 
         return attn, attn_weights
 
@@ -655,6 +687,7 @@ class MultiheadAttention(nn.Module):
             bias = bias[start:end]
         return F.linear(input, weight, bias)
 
+    @torch.jit.export
     def reorder_incremental_state(self, incremental_state, new_order):
         """Reorder buffered internal state (for incremental generation)."""
         input_buffer = self._get_input_buffer(incremental_state)

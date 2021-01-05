@@ -1,4 +1,4 @@
-model_signature=prime_transformer_wmt_en_zh
+model_signature=prime_transformer_wmt_en_zh_big
 GPU="4,5,6,7"
 attn_dynamic_cat=1
 attn_dynamic_type=2
