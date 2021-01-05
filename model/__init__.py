@@ -4,7 +4,7 @@ from .prime_transformer import prime_base_architecture
 from .transformer import transformer_base_architecture
 
 
-@register_model_architecture('transformer', 'transformer_wmt_en_zh')
+@register_model_architecture('our_transformer', 'transformer_wmt_en_zh')
 def transformer_wmt_en_zh(args):
     args.encoder_embed_dim = getattr(args, "encoder_embed_dim", 512)
     args.encoder_ffn_embed_dim = getattr(args, "encoder_ffn_embed_dim", 1024)
@@ -17,7 +17,7 @@ def transformer_wmt_en_zh(args):
     transformer_base_architecture(args)
 
 
-@register_model_architecture('transformer', 'transformer_wmt_en_zh_big')
+@register_model_architecture('our_transformer', 'transformer_wmt_en_zh_big')
 def transformer_wmt_en_zh_big(args):
     args.encoder_embed_dim = getattr(args, "encoder_embed_dim", 512)
     args.encoder_ffn_embed_dim = getattr(args, "encoder_ffn_embed_dim", 2048)

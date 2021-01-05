@@ -188,7 +188,6 @@ class SparseTransformerDecoderLayer(TransformerDecoderLayer):
                 need_weights=need_attn or (not self.training and self.need_attn),
                 need_head_weights=need_head_weights,
             )
-            print(attn)  # test code
             x = self.dropout_module(x)
             x = self.residual_connection(x, residual)
             if not self.normalize_before:
