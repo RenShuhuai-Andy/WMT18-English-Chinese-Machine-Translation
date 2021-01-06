@@ -12,6 +12,7 @@ pip install -r requirements.txt
 ## Process data
 
 ```
+bash prepare-wmt18en-zh.sh
 sh process.sh jointed
 ```
 
@@ -21,7 +22,7 @@ sh process.sh jointed
 sh train.sh
 ```
 
-## Evaluation`
+## Evaluation
 
 ```
 sh evaluate.sh

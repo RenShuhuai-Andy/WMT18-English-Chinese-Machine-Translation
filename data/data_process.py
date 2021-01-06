@@ -11,8 +11,9 @@ def data_process(file_dir, data_type):
         data = json.load(f)
         for en_zh_pair in data:
             ef.write(en_zh_pair[0] + '\n')
-            zh_words = list(jieba.cut(en_zh_pair[1]))
-            zf.write(' '.join(zh_words) + '\n')
+            # zh_words = list(jieba.cut(en_zh_pair[1]))
+            # zf.write(' '.join(zh_words) + '\n')
+            zf.write(en_zh_pair[1] + '\n')
 
 
 if __name__ == '__main__':

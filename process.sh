@@ -1,7 +1,5 @@
-TEXT=data/dataset
+TEXT=data/wmt18_en_zh
 DICT=$1
-
-python data/data_process.py
 
 case $DICT in
   disjointed)
@@ -19,7 +17,7 @@ case $DICT in
     --joined-dictionary \
     --trainpref $TEXT/train --validpref $TEXT/dev \
     --testpref $TEXT/test \
-    --thresholdtgt 0 --thresholdsrc 0 \
+    --nwordssrc 32768 --nwordstgt 32768 \
     --destdir data/data-bin-jointed \
     --workers 20
   ;;
