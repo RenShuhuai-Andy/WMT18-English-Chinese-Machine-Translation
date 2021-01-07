@@ -115,6 +115,9 @@ class OurTransformerModel(TransformerModel):
         # args for top-k selection
         parser.add_argument('--top-k', type=int, metavar='D', default=-1,
                             help='Topk attention weights to keep for sparse attention')
+        # args for printing score
+        parser.add_argument('--print-attn-score', default=False, action="store_true",
+                            help="Whether print attention score ")
         # fmt: on
 
     @classmethod
@@ -194,6 +197,7 @@ class OurTransformerDecoder(TransformerDecoder):
 
     def __init__(self, args, dictionary, embed_tokens, no_encoder_attn=False):
         super().__init__(args, dictionary=dictionary, embed_tokens=embed_tokens, no_encoder_attn=no_encoder_attn)
+        self.print_attn_score = args.print_attn_score
 
     def forward(
             self,
@@ -215,7 +219,8 @@ class OurTransformerDecoder(TransformerDecoder):
             alignment_layer=alignment_layer,
             alignment_heads=alignment_heads,
         )
-        print(extra['attn'])
+        if self.print_attn_score:
+            print(extra['attn'])
         if not features_only:
             x = self.output_layer(x)
         return x, extra
@@ -273,3 +278,4 @@ def transformer_base_architecture(args):
     args.quant_noise_pq = getattr(args, "quant_noise_pq", 0)
     args.quant_noise_pq_block_size = getattr(args, "quant_noise_pq_block_size", 8)
     args.quant_noise_scalar = getattr(args, "quant_noise_scalar", 0)
+    args.print_attn_score = getattr(args, "print_attn_score", False)

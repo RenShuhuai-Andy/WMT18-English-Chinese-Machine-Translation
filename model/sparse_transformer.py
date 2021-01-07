@@ -282,3 +282,5 @@ def sparse_base_architecture(args):
     args.quant_noise_pq_block_size = getattr(args, "quant_noise_pq_block_size", 8)
     args.quant_noise_scalar = getattr(args, "quant_noise_scalar", 0)
     args.top_k = getattr(args, "top_k", -1)
+    args.print_attn_score = getattr(args, "print_attn_score", False)
+
