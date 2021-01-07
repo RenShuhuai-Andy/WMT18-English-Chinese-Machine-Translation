@@ -1,24 +1,17 @@
-import math
-from typing import Any, Dict, List, Optional, Tuple
-
 import torch
-import torch.nn as nn
 from fairseq import utils
 from fairseq.models.transformer import TransformerModel, TransformerEncoder, TransformerDecoder
 from fairseq.models import (
     register_model,
     register_model_architecture,
 )
-from .modules.sparse_transformer_layer import SparseTransformerDecoderLayer, SparseTransformerEncoderLayer
-from .modules.checkpoint_activations import checkpoint_wrapper
-
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 
 
-@register_model("sparse_transformer")
-class SparseTransformerModel(TransformerModel):
+@register_model("our_transformer")
+class OurTransformerModel(TransformerModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
     <https://arxiv.org/abs/1706.03762>`_.
@@ -132,7 +125,7 @@ class SparseTransformerModel(TransformerModel):
         """Build a new model instance."""
 
         # make sure all arguments are present in older models
-        sparse_base_architecture(args)
+        transformer_base_architecture(args)
 
         if args.encoder_layers_to_keep:
             args.encoder_layers = len(args.encoder_layers_to_keep.split(","))
@@ -154,7 +147,7 @@ class SparseTransformerModel(TransformerModel):
                     "--share-all-embeddings requires --encoder-embed-dim to match --decoder-embed-dim"
                 )
             if args.decoder_embed_path and (
-                args.decoder_embed_path != args.encoder_embed_path
+                    args.decoder_embed_path != args.encoder_embed_path
             ):
                 raise ValueError(
                     "--share-all-embeddings not compatible with --decoder-embed-path"
@@ -171,17 +164,18 @@ class SparseTransformerModel(TransformerModel):
             decoder_embed_tokens = cls.build_embedding(
                 args, tgt_dict, args.decoder_embed_dim, args.decoder_embed_path
             )
+
         encoder = cls.build_encoder(args, src_dict, encoder_embed_tokens)
         decoder = cls.build_decoder(args, tgt_dict, decoder_embed_tokens)
         return cls(args, encoder, decoder)
 
     @classmethod
     def build_encoder(cls, args, src_dict, embed_tokens):
-        return SparseTransformerEncoder(args, src_dict, embed_tokens)
+        return TransformerEncoder(args, src_dict, embed_tokens)
 
     @classmethod
     def build_decoder(cls, args, tgt_dict, embed_tokens):
-        return SparseTransformerDecoder(
+        return OurTransformerDecoder(
             args,
             tgt_dict,
             embed_tokens,
@@ -189,27 +183,7 @@ class SparseTransformerModel(TransformerModel):
         )
 
 
-class SparseTransformerEncoder(TransformerEncoder):
-    """
-    Transformer encoder consisting of *args.encoder_layers* layers. Each layer
-    is a :class:`SparseTransformerEncoderLayer`.
-    Args:
-        args (argparse.Namespace): parsed command-line arguments
-        dictionary (~fairseq.data.Dictionary): encoding dictionary
-        embed_tokens (torch.nn.Embedding): input embedding
-    """
-
-    def __init__(self, args, dictionary, embed_tokens):
-        super().__init__(args, dictionary=dictionary, embed_tokens=embed_tokens)
-
-    def build_encoder_layer(self, args):
-        layer = SparseTransformerEncoderLayer(args)
-        if getattr(args, "checkpoint_activations", False):
-            layer = checkpoint_wrapper(layer)
-        return layer
-
-
-class SparseTransformerDecoder(TransformerDecoder):
+class OurTransformerDecoder(TransformerDecoder):
     """
     Transformer decoder consisting of *args.decoder_layers* layers. Each layer
     is a :class:`SparseTransformerDecoderLayer`.
@@ -224,42 +198,19 @@ class SparseTransformerDecoder(TransformerDecoder):
     def __init__(self, args, dictionary, embed_tokens, no_encoder_attn=False):
         super().__init__(args, dictionary=dictionary, embed_tokens=embed_tokens, no_encoder_attn=no_encoder_attn)
         self.print_attn_score = args.print_attn_score
-    def build_decoder_layer(self, args, no_encoder_attn=False):
-        layer = SparseTransformerDecoderLayer(args, no_encoder_attn)
-        if getattr(args, "checkpoint_activations", False):
-            layer = checkpoint_wrapper(layer)
-        return layer
 
     def forward(
-        self,
-        prev_output_tokens,
-        encoder_out = None,
-        incremental_state = None,
-        features_only: bool = False,
-        full_context_alignment: bool = False,
-        alignment_layer= None,
-        alignment_heads = None,
-        src_lengths= None,
-        return_all_hiddens: bool = False,
+            self,
+            prev_output_tokens,
+            encoder_out=None,
+            incremental_state=None,
+            features_only: bool = False,
+            full_context_alignment: bool = False,
+            alignment_layer=None,
+            alignment_heads=None,
+            src_lengths=None,
+            return_all_hiddens=False,
     ):
-        """
-        Args:
-            prev_output_tokens (LongTensor): previous decoder outputs of shape
-                `(batch, tgt_len)`, for teacher forcing
-            encoder_out (optional): output from the encoder, used for
-                encoder-side attention
-            incremental_state (dict): dictionary used for storing state during
-                :ref:`Incremental decoding`
-            features_only (bool, optional): only return features without
-                applying output layer (default: False).
-            full_context_alignment (bool, optional): don't apply
-                auto-regressive mask to self-attention (default: False).
-
-        Returns:
-            tuple:
-                - the decoder's output of shape `(batch, tgt_len, vocab)`
-                - a dictionary with any model-specific outputs
-        """
         x, extra = self.extract_features(
             prev_output_tokens,
             encoder_out=encoder_out,
@@ -275,8 +226,8 @@ class SparseTransformerDecoder(TransformerDecoder):
         return x, extra
 
 
-@register_model_architecture("sparse_transformer", "sparse_transformer")
-def sparse_base_architecture(args):
+@register_model_architecture("our_transformer", "our_transformer")
+def transformer_base_architecture(args):
     args.encoder_embed_path = getattr(args, "encoder_embed_path", None)
     args.encoder_embed_dim = getattr(args, "encoder_embed_dim", 512)
     args.encoder_ffn_embed_dim = getattr(args, "encoder_ffn_embed_dim", 2048)
@@ -327,6 +278,4 @@ def sparse_base_architecture(args):
     args.quant_noise_pq = getattr(args, "quant_noise_pq", 0)
     args.quant_noise_pq_block_size = getattr(args, "quant_noise_pq_block_size", 8)
     args.quant_noise_scalar = getattr(args, "quant_noise_scalar", 0)
-    args.top_k = getattr(args, "top_k", -1)
     args.print_attn_score = getattr(args, "print_attn_score", False)
-
