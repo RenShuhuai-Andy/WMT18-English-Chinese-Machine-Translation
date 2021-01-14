@@ -1,5 +1,5 @@
-model_signature=sparse_transformer_wmt_en_zh
-GPU="4,5,6,7"
+model_signature=sparse_transformer_wmt_en_zh_big
+GPU="0,1,2,3"
 TOPK=8
 save_tag=${model_signature}_topk${TOPK}
 
@@ -10,7 +10,7 @@ CUDA_VISIBLE_DEVICES=$GPU fairseq-train \
     --task translation \
     --optimizer adam --adam-betas '(0.9,0.98)' --clip-norm 0.0 \
     --save-dir checkpoints/$save_tag \
-    --max-update 15000 --save-interval-updates 2000  --validate-interval 3 \
+    --max-update 25000 --save-interval-updates 2000  --validate-interval 3 \
     --keep-interval-updates 40 \
     --lr 5e-4 --lr-scheduler inverse_sqrt --warmup-updates 4000 \
     --weight-decay 0.0001 \
