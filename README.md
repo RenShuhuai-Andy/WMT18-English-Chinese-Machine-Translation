@@ -4,6 +4,15 @@ Assignment for PKU Computational Linguistics 2020 fall.
 
 Achieve WMT18 en-zh Machine Translation with [Vanilla Transformer](https://arxiv.org/abs/1706.03762), [Explicit Sparse Transformer](https://arxiv.org/abs/1912.11637), and [PRIME (PaRallel Intersected Multi-scale AttEntion)](https://arxiv.org/abs/1911.09483).
 
+## Introduction
+### Explicit Sparse Transformer
+![Explicit Sparse Transformer](figures/explicit-sparse-attn.png)
+### PRIME
+![Prime](figures/prime.png)
+### Comparison of vanilla attention and sparse attention
+![Prime](figures/attention_comparison.png)
+
+
 ## Prepare environment
 
 ```
