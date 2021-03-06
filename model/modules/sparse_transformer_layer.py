@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 import torch
 from fairseq.modules import TransformerEncoderLayer, TransformerDecoderLayer
-from .sparse_mha_new import SparseMultiheadAttention
+from .sparse_mha import SparseMultiheadAttention
 
 
 class SparseTransformerEncoderLayer(TransformerEncoderLayer):

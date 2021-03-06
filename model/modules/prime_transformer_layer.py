@@ -1,5 +1,5 @@
 from fairseq.modules import TransformerEncoderLayer, TransformerDecoderLayer
-from .prime_mha import MultiheadAttention820
+from .prime_mha import PrimeMultiheadAttention
 
 
 class PrimeTransformerEncoderLayer(TransformerEncoderLayer):
@@ -8,7 +8,7 @@ class PrimeTransformerEncoderLayer(TransformerEncoderLayer):
         super().__init__(args)
         
     def build_self_attention(self, embed_dim, args):
-        return MultiheadAttention820(
+        return PrimeMultiheadAttention(
             self.embed_dim, args.encoder_attention_heads, layer_id=self.layer_id, args=args,
             dropout=args.attention_dropout, cur_attn_type='es'
         )
@@ -38,7 +38,7 @@ class PrimeTransformerDecoderLayer(TransformerDecoderLayer):
     def build_self_attention(
             self, embed_dim, args, add_bias_kv=False, add_zero_attn=False
     ):
-        return MultiheadAttention820(
+        return PrimeMultiheadAttention(
             embed_dim=self.embed_dim,
             num_heads=args.decoder_attention_heads,
             layer_id=self.layer_id,
@@ -50,7 +50,7 @@ class PrimeTransformerDecoderLayer(TransformerDecoderLayer):
         )
 
     def build_encoder_attention(self, embed_dim, args):
-        return MultiheadAttention820(
+        return PrimeMultiheadAttention(
             self.embed_dim, args.decoder_attention_heads,
             layer_id=self.layer_id,
             args=args,
