@@ -22,6 +22,11 @@ CUDA_VISIBLE_DEVICES=$GPU fairseq-train \
     --attn_wide_kernels [3,15]  \
     --dynamic_gate 1 \
     --attn_dynamic_cat ${attn_dynamic_cat} \
-    --max-tokens 4096 2>&1 | tee -a logs/$save_tag.log
+    --max-tokens 4096 \
+    --eval-bleu \
+    --eval-bleu-args '{"beam": 4, "max_len_a": 1.2, "max_len_b": 10}' \
+    --eval-bleu-detok moses \
+    --eval-bleu-remove-bpe \
+    --best-checkpoint-metric bleu --maximize-best-checkpoint-metric 2>&1 | tee -a logs/$save_tag.log
 
 

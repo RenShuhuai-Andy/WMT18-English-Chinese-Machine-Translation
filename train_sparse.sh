@@ -1,4 +1,4 @@
-model_signature=sparse_transformer_wmt_en_zh_big
+model_signature=sparse_transformer_wmt_en_zh
 GPU="0,1,2,3"
 TOPK=8
 save_tag=${model_signature}_topk${TOPK}
@@ -20,7 +20,6 @@ CUDA_VISIBLE_DEVICES=$GPU fairseq-train \
     --eval-bleu-args '{"beam": 4, "max_len_a": 1.2, "max_len_b": 10}' \
     --eval-bleu-detok moses \
     --eval-bleu-remove-bpe \
-    --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
-    --tensorboard-logdir tensorboard-logdir/$save_tag 2>&1 | tee -a logs/$save_tag.log
+    --best-checkpoint-metric bleu --maximize-best-checkpoint-metric 2>&1 | tee -a logs/$save_tag.log
 
 
