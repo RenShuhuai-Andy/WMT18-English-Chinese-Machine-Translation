@@ -26,7 +26,7 @@ python average_checkpoints.py --inputs $OUTPUT_PATH \
 result_dir=results/$model_signature
 
 CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES fairseq-generate \
-      data/data-bin-jointed \
+      data/data-bin-joint \
       --user-dir model \
       --task translation \
       --results-path $result_dir/avg_$num_epoch_checkpoints \
@@ -39,7 +39,7 @@ echo "evaluation on average_checkpoints $num_epoch_checkpoints:" | tee -a logs/$
 tail -1 $result_dir/avg_$num_epoch_checkpoints/generate-test.txt | tee -a logs/$model_signature.log
 
 CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES fairseq-generate \
-      data/data-bin-jointed \
+      data/data-bin-joint \
       --user-dir model \
       --task translation \
       --results-path $result_dir \

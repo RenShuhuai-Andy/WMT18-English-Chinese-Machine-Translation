@@ -4,7 +4,7 @@ TOPK=8
 save_tag=${model_signature}_topk${TOPK}
 
 CUDA_VISIBLE_DEVICES=$GPU fairseq-train \
-    data/data-bin-jointed --share-all-embeddings --top-k $TOPK \
+    data/data-bin-joint --share-all-embeddings --top-k $TOPK \
     --user-dir model --fp16  \
     --arch $model_signature \
     --task translation \

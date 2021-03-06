@@ -3,7 +3,7 @@ GPU="0,1,2,3"
 save_tag=${model_signature}
 
 CUDA_VISIBLE_DEVICES=$GPU fairseq-train \
-    data/data-bin-jointed --share-all-embeddings \
+    data/data-bin-joint --share-all-embeddings \
     --user-dir model --fp16  \
     --arch $model_signature \
     --task translation \
