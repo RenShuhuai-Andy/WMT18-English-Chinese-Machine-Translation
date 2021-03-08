@@ -5,6 +5,17 @@ Assignment for PKU Computational Linguistics 2020 fall.
 Achieve WMT18 en-zh Machine Translation with [Vanilla Transformer](https://arxiv.org/abs/1706.03762), [Explicit Sparse Transformer](https://arxiv.org/abs/1912.11637), and [PRIME (PaRallel Intersected Multi-scale AttEntion)](https://arxiv.org/abs/1911.09483).
 
 ## Introduction
+
+### Dataset
+
+We conduct the **en-zh** translation experiment on a subset of [WMT18 **zh-en** dataset](http://www.statmt.org/wmt18/translation-task.html). The statistics of our dataset is :
+
+| WMT18 en-zh | # Examples | Avg Length (en/zh) | Max Length (en/zh) |
+| ----------- | ---------- | ------------------ | ------------------ |
+| Train       | 176,943    | 22.05 / 23.71      | 153/511            |
+| Dev         | 25,278     | 22.08 / 23.70      | 94 / 110           |
+| Test        | 50,556     | 22.05 / 23.70      | 116 / 111          |
+
 ### Explicit Sparse Transformer
 ![Explicit Sparse Transformer](figures/explicit-sparse-attn.png)
 ### PRIME
