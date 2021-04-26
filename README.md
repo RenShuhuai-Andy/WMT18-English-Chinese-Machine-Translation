@@ -30,7 +30,7 @@ We conduct the **en-zh** translation experiment on a subset of [WMT18 **zh-en** 
 conda create -n mt python=3.6
 conda activate mt
 conda install pytorch torchvision cudatoolkit=10.0 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch
-pip install -r requirements.txt 
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 ## Process data
