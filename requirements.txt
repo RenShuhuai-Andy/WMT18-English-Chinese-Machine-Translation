@@ -10,9 +10,6 @@ hydra-core==1.0.4
 importlib-resources==3.3.0
 jieba==0.42.1
 joblib==0.17.0
-mkl-fft==1.2.0
-mkl-random==1.1.1
-mkl-service==2.3.0
 olefile==0.46
 omegaconf==2.0.5
 portalocker==2.0.0
